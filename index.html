@@ -459,7 +459,9 @@ const pieces = [];
 // Build a foot-shaped 2D outline as a THREE.Shape, then extrude.
 // Foot points (x = length axis, y = width). Heel at -1.6, toes at +1.6.
 function makeFootShape(scaleX = 1.0, scaleY = 1.0) {
-  const s = new THREE.Shape();
+  // Anchor points around the foot outline. We feed these through a closed
+  // Catmull-Rom spline so the silhouette reads as a continuous curve instead
+  // of a polygonal walk — this is what kills the "blocky" look.
   const pts = [
     [-1.55,  0.00], [-1.50,  0.42], [-1.30,  0.60], [-1.00,  0.62],
     [-0.60,  0.55], [-0.20,  0.52], [ 0.20,  0.55], [ 0.60,  0.62],
@@ -468,8 +470,13 @@ function makeFootShape(scaleX = 1.0, scaleY = 1.0) {
     [ 0.50, -0.38], [ 0.10, -0.42], [-0.30, -0.48], [-0.70, -0.55],
     [-1.10, -0.55], [-1.40, -0.42], [-1.55, -0.20],
   ];
-  s.moveTo(pts[0][0] * scaleX, pts[0][1] * scaleY);
-  for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0] * scaleX, pts[i][1] * scaleY);
+  const vec2s = pts.map(([x, y]) => new THREE.Vector2(x * scaleX, y * scaleY));
+  const curve = new THREE.SplineCurve(vec2s);
+  curve.closed = true;
+  const dense = curve.getPoints(pts.length * 12); // ~280 samples
+  const s = new THREE.Shape();
+  s.moveTo(dense[0].x, dense[0].y);
+  for (let i = 1; i < dense.length; i++) s.lineTo(dense[i].x, dense[i].y);
   s.closePath();
   return s;
 }
@@ -481,8 +488,8 @@ function addLayer(thickness, yHome, opts = {}) {
     bevelEnabled: true,
     bevelThickness: opts.bevel ?? 0.04,
     bevelSize: opts.bevel ?? 0.04,
-    bevelSegments: 2,
-    curveSegments: 24,
+    bevelSegments: 6,
+    curveSegments: 96,
   });
   geom.translate(0, 0, -thickness / 2);
 
@@ -496,7 +503,9 @@ function addLayer(thickness, yHome, opts = {}) {
   const mesh = new THREE.Mesh(geom, fillMat);
   group.add(mesh);
 
-  const edges = new THREE.EdgesGeometry(geom, opts.edgeAngle ?? 28);
+  // Higher threshold suppresses facet seams on the curved side wall;
+  // we keep only the genuine silhouette + bevel transitions.
+  const edges = new THREE.EdgesGeometry(geom, opts.edgeAngle ?? 42);
   const stroke = opts.accent ? accentMat : inkMat;
   const inkLine = new THREE.LineSegments(edges, stroke);
   group.add(inkLine); linesList.push(inkLine);
