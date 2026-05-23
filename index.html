@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Shoes — scanned, modeled, shipped.</title>
+<meta name="description" content="Custom orthotic insoles. iPhone LiDAR scan, AI correction modeling, quarterly delivery. A wellness program for the feet you already have." />
+<meta property="og:title" content="Shoes" />
+<meta property="og:description" content="Scanned. Modeled. Shipped. AI-driven custom insoles, quarterly." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E%F0%9F%91%A3%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f4f4f4;
+    --ink: #0a0a0a;
+    --ink-soft: #1a1a1a;
+    --muted: #595959;
+    --muted-soft: #8a8a8a;
+    --hair: rgba(10, 10, 10, 0.10);
+    --hair-soft: rgba(10, 10, 10, 0.06);
+    --accent: #0a0a0a;
+    --accent-ink: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  #c {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    display: block;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* top nav */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 36px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.85), rgba(255,255,255,0));
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .wordmark {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 28px; letter-spacing: -0.01em; line-height: 1;
+    display: inline-flex; align-items: baseline; gap: 6px;
+  }
+  .wordmark em { font-style: italic; }
+  .wordmark .dot {
+    display: inline-block; width: 7px; height: 7px;
+    background: var(--ink); border-radius: 50%;
+    transform: translateY(-2px);
+  }
+  .nav-links { display: flex; gap: 28px; font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+  .nav-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+  .nav-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--ink); color: var(--bg);
+    padding: 9px 16px; border-radius: 999px;
+    font-size: 13px; font-weight: 500; white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .nav-cta:hover { background: var(--bg); color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .nav-right { display: flex; align-items: center; gap: 24px; }
+
+  /* scroll progress rail */
+  .rail {
+    position: fixed; right: 22px; top: 50%;
+    transform: translateY(-50%); z-index: 10;
+    display: flex; flex-direction: column; gap: 14px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--muted);
+    pointer-events: none;
+  }
+  .rail .tick { display: flex; align-items: center; gap: 10px; opacity: 0.4; transition: opacity 0.4s ease, color 0.4s ease; }
+  .rail .tick .bar { width: 22px; height: 1px; background: currentColor; }
+  .rail .tick.active { opacity: 1; color: var(--ink); }
+
+  /* sections */
+  main { position: relative; z-index: 1; }
+  section {
+    position: relative;
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 0 64px;
+  }
+  .panel {
+    max-width: 580px;
+    will-change: transform, opacity;
+    position: relative;
+    padding: 44px 44px 40px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid var(--hair);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.8) inset,
+      0 30px 60px -30px rgba(10, 10, 10, 0.18),
+      0 8px 24px -12px rgba(10, 10, 10, 0.08);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.5s ease;
+  }
+  .panel::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.6), transparent 55%),
+      radial-gradient(80% 60% at 100% 100%, rgba(10, 10, 10, 0.03), transparent 60%);
+    pointer-events: none;
+  }
+  .panel > * { position: relative; }
+  .panel.right { margin-left: auto; text-align: right; }
+  .panel.center { margin: 0 auto; text-align: center; max-width: 660px; }
+  .panel:hover { transform: translateY(-3px); box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.9) inset,
+      0 40px 70px -28px rgba(10, 10, 10, 0.22),
+      0 10px 28px -10px rgba(10, 10, 10, 0.12); }
+
+  .tag {
+    position: absolute; top: 18px; right: 22px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap;
+  }
+  .tag .ring {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ink);
+    box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.12);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.12); }
+    50%      { box-shadow: 0 0 0 6px rgba(10, 10, 10, 0.04); }
+  }
+  .panel.right .tag { left: 22px; right: auto; }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 22px;
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--muted); }
+  .panel.right .eyebrow { flex-direction: row-reverse; }
+  .panel.right .eyebrow::before { display: none; }
+  .panel.right .eyebrow::after { content: ""; width: 22px; height: 1px; background: var(--muted); }
+  .panel.center .eyebrow::before { display: none; }
+
+  h1, h2 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400; line-height: 0.98; letter-spacing: -0.025em;
+    margin: 0 0 22px;
+  }
+  h1 { font-size: clamp(56px, 7.2vw, 116px); }
+  h2 { font-size: clamp(44px, 5.4vw, 88px); }
+  h1 em, h2 em { font-style: italic; }
+
+  .sub { font-size: 17px; line-height: 1.55; color: var(--muted); max-width: 480px; margin: 0 0 32px; }
+  .panel.right .sub { margin-left: auto; }
+  .panel.center .sub { margin-left: auto; margin-right: auto; }
+
+  .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  .panel.right .ctas { justify-content: flex-end; }
+  .panel.center .ctas { justify-content: center; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 22px; border-radius: 999px;
+    font-size: 14px; font-weight: 500; white-space: nowrap; flex-shrink: 0;
+    transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--ink); color: var(--bg); }
+  .btn-primary:hover { background: var(--bg); color: var(--ink); border-color: var(--ink); }
+  .btn-ghost { border-color: var(--hair); color: var(--ink); }
+  .btn-ghost:hover { border-color: var(--ink); }
+  .btn .arrow { transition: transform 0.2s ease; }
+  .btn:hover .arrow { transform: translateX(3px); }
+
+  .panel { opacity: 0; transform: translateY(28px); }
+  .panel.in { opacity: 1; transform: translateY(0); }
+  .panel { transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.5s ease; }
+
+  .scroll-cue {
+    position: absolute; left: 64px; bottom: 36px;
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .scroll-cue .line {
+    display: inline-block; width: 36px; height: 1px; background: var(--muted);
+    position: relative; overflow: hidden;
+  }
+  .scroll-cue .line::after {
+    content: ""; position: absolute; inset: 0; background: var(--ink);
+    animation: sweep 2.4s ease-in-out infinite;
+  }
+  @keyframes sweep { 0% { transform: translateX(-100%); } 60%,100% { transform: translateX(100%); } }
+
+  /* Spec card under panel */
+  .spec {
+    margin-top: 26px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    border-top: 1px solid var(--hair); padding-top: 22px;
+  }
+  .panel.right .spec { direction: rtl; }
+  .panel.right .spec > * { direction: ltr; }
+  .spec .k { font-family: 'Instrument Serif', Georgia, serif; font-size: 24px; line-height: 1; color: var(--ink); letter-spacing: -0.01em; font-style: italic; }
+  .spec .v { font-size: 11px; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-top: 6px; }
+
+  /* stats strip */
+  .strip {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair);
+    padding: 28px 0; margin-top: 44px; width: min(960px, 100%);
+  }
+  .feat { display: flex; flex-direction: column; gap: 6px; padding: 0 20px; border-left: 1px solid var(--hair); }
+  .feat:first-child { border-left: none; padding-left: 0; }
+  .feat .k { font-family: 'Instrument Serif', Georgia, serif; font-size: 28px; line-height: 1; color: var(--ink); letter-spacing: -0.01em; font-style: italic; }
+  .feat .v { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+  footer {
+    position: relative; z-index: 1;
+    padding: 40px 64px; border-top: 1px solid var(--hair);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--muted);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  footer .mark { color: var(--ink); }
+
+  .grain {
+    position: fixed; inset: 0; z-index: 20; pointer-events: none;
+    opacity: 0.05; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.65 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-size: 240px 240px;
+  }
+
+  .halo {
+    position: fixed; left: 50%; top: 50%;
+    width: 80vmin; height: 80vmin;
+    transform: translate(-50%, -50%);
+    z-index: 0; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(10, 10, 10, 0.06), rgba(10, 10, 10, 0) 70%);
+    filter: blur(20px);
+    will-change: transform;
+  }
+
+  @media (max-width: 860px) {
+    section { padding: 0 18px; }
+    .panel, .panel.right, .panel.center { max-width: 100%; text-align: left; margin: 0; padding: 32px 24px 28px; border-radius: 18px; }
+    .panel .tag { top: 14px; right: 16px; font-size: 9px; }
+    .panel.right .tag { left: 16px; right: auto; }
+    h1 { font-size: clamp(44px, 11vw, 64px); }
+    h2 { font-size: clamp(36px, 9vw, 56px); }
+    .btn { padding: 12px 18px; font-size: 13px; }
+    .ctas { gap: 10px; }
+    .panel.right .ctas, .panel.center .ctas { justify-content: flex-start; }
+    .panel.right .sub, .panel.center .sub { margin-left: 0; margin-right: 0; }
+    .panel.right .eyebrow { flex-direction: row; }
+    .panel.right .eyebrow::after { display: none; }
+    .panel.right .eyebrow::before, .panel.center .eyebrow::before { content: ""; display: inline-block; width: 22px; height: 1px; background: var(--muted); }
+    nav { padding: 16px 22px; }
+    .nav-links { display: none; }
+    .rail { display: none; }
+    .scroll-cue { left: 24px; }
+    .strip { grid-template-columns: repeat(2, 1fr); row-gap: 18px; padding: 22px 0; }
+    .feat:nth-child(3) { border-left: none; padding-left: 0; }
+    .spec { grid-template-columns: repeat(2, 1fr); }
+    .panel.right .spec { direction: ltr; }
+    footer { flex-direction: column; gap: 12px; padding: 28px 24px; text-align: center; }
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="halo"></div>
+<div class="grain"></div>
+
+<nav>
+  <a class="wordmark" href="/">Shoes<em>.</em><span class="dot"></span></a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="#scan">Scan</a>
+      <a href="#model">Model</a>
+      <a href="#ship">Ship</a>
+      <a href="#about">About</a>
+    </div>
+    <a class="nav-cta" href="#waitlist">
+      Join the waitlist <span class="arrow">→</span>
+    </a>
+  </div>
+</nav>
+
+<aside class="rail" id="rail">
+  <div class="tick" data-i="0"><span>01 — Intro</span><span class="bar"></span></div>
+  <div class="tick" data-i="1"><span>02 — Scan</span><span class="bar"></span></div>
+  <div class="tick" data-i="2"><span>03 — Model</span><span class="bar"></span></div>
+  <div class="tick" data-i="3"><span>04 — Ship</span><span class="bar"></span></div>
+  <div class="tick" data-i="4"><span>05 — About</span><span class="bar"></span></div>
+</aside>
+
+<main>
+  <section id="hero" data-i="0">
+    <div class="panel">
+      <div class="tag"><span class="ring"></span>01 / Intro</div>
+      <div class="eyebrow">A quarterly wellness program</div>
+      <h1>Scanned. Modeled. <em>Shipped</em>.</h1>
+      <p class="sub">
+        Custom orthotic insoles for the feet you already have. We scan with the
+        LiDAR sensor in your iPhone, model the correction with AI, and ship a
+        fresh pair every quarter as your gait changes.
+      </p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#scan">How it works <span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="#about">Why insoles</a>
+      </div>
+    </div>
+    <div class="scroll-cue"><span class="line"></span>Scroll &nbsp;— take a step</div>
+  </section>
+
+  <section id="scan" data-i="1">
+    <div class="panel right">
+      <div class="tag"><span class="ring"></span>02 / Scan</div>
+      <div class="eyebrow">The phone in your pocket</div>
+      <h2>Your foot, <em>mapped</em>.</h2>
+      <p class="sub">
+        Stand. Sweep the phone. Done in under a minute. LiDAR captures a 3D
+        mesh of each foot to 2–3 mm tolerance — averaged across passes, the AI
+        targets 1–2 mm. No casting kits, no plaster, no clinic visit.
+      </p>
+      <div class="spec">
+        <div><div class="k">LiDAR</div><div class="v">Sensor</div></div>
+        <div><div class="k">1–2 mm</div><div class="v">Tolerance</div></div>
+        <div><div class="k">60 sec</div><div class="v">Per foot</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="model" data-i="2">
+    <div class="panel">
+      <div class="tag"><span class="ring"></span>03 / Model</div>
+      <div class="eyebrow">Correction, learned</div>
+      <h2>Corrected by <em>your data</em>.</h2>
+      <p class="sub">
+        Pronation, supination, bunions, leg length discrepancy — the model
+        reads them off the mesh and proposes a correction trajectory. Weekly
+        comfort feedback tunes the next pair. The longer you wear them, the
+        closer the fit gets.
+      </p>
+    </div>
+  </section>
+
+  <section id="ship" data-i="3">
+    <div class="panel right">
+      <div class="tag"><span class="ring"></span>04 / Ship</div>
+      <div class="eyebrow">Direct from the factory</div>
+      <h2>Quarterly, <em>by mail</em>.</h2>
+      <p class="sub">
+        A new pair every three months, milled to the latest model output and
+        sent direct from the factory. The feedback loop is the product — your
+        feet move, the insoles move with them. Slide them into the shoes you
+        already own.
+      </p>
+    </div>
+  </section>
+
+  <section id="about" data-i="4">
+    <div class="panel center">
+      <div class="tag"><span class="ring"></span>05 / About</div>
+      <div class="eyebrow">The team behind the scan</div>
+      <h2>Wellness first — <em>not a medical device</em>.</h2>
+      <p class="sub">
+        Built by a small team in New York and Shenzhen. Phase one is a comfort
+        and wellness program; clinical claims, if and when, follow advisors
+        and outcome data. No FDA marketing. No prescription needed. Just
+        better-fitting insoles, on a cadence.
+      </p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#" id="waitlist">Join the waitlist <span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="#hero">Back to the top</a>
+      </div>
+      <div class="strip">
+        <div class="feat"><div class="k">LiDAR</div><div class="v">iPhone-native scan</div></div>
+        <div class="feat"><div class="k">AI</div><div class="v">Per-foot correction model</div></div>
+        <div class="feat"><div class="k">¼</div><div class="v">New pair each quarter</div></div>
+        <div class="feat"><div class="k">∞</div><div class="v">Feedback, forever</div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© Shoes — scanned, modeled, shipped.</div>
+  <div>A <span class="mark">makeacompany.ai</span> project</div>
+</footer>
+
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0xffffff, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+camera.position.set(0, 0.8, 7.6);
+camera.lookAt(0, 0, 0);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const key = new THREE.DirectionalLight(0xffffff, 0.7);
+key.position.set(5, 6, 4); scene.add(key);
+const cool = new THREE.DirectionalLight(0xe8efff, 0.25);
+cool.position.set(-4, -2, -3); scene.add(cool);
+
+// --- Build a pencil-sketch exploded insole stack from primitives ---
+// The hero object is an insole. Stacked layers from top to bottom:
+//   top cover (thin)
+//   memory foam
+//   contoured arch shell (the structural piece)
+//   EVA midsole
+//   base / bottom sheet
+// Each layer is a flattened, foot-shaped slab. On scroll-mid they separate
+// vertically — the canonical exploded technical drawing — then reassemble.
+const insoleGroup = new THREE.Group();
+scene.add(insoleGroup);
+
+const PAPER = 0xffffff;
+const fillMat = new THREE.MeshBasicMaterial({
+  color: PAPER, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+});
+const inkMat = new THREE.LineBasicMaterial({ color: 0x0a0a0a, transparent: true, opacity: 1 });
+const ghostMat = new THREE.LineBasicMaterial({ color: 0x444444, transparent: true, opacity: 0.55 });
+const accentMat = new THREE.LineBasicMaterial({ color: 0x0a0a0a, transparent: true, opacity: 0.9 });
+
+const linesList = [];
+const pieces = [];
+
+// Build a foot-shaped 2D outline as a THREE.Shape, then extrude.
+// Foot points (x = length axis, y = width). Heel at -1.6, toes at +1.6.
+function makeFootShape(scaleX = 1.0, scaleY = 1.0) {
+  const s = new THREE.Shape();
+  const pts = [
+    [-1.55,  0.00], [-1.50,  0.42], [-1.30,  0.60], [-1.00,  0.62],
+    [-0.60,  0.55], [-0.20,  0.52], [ 0.20,  0.55], [ 0.60,  0.62],
+    [ 1.00,  0.72], [ 1.30,  0.78], [ 1.50,  0.72], [ 1.60,  0.50],
+    [ 1.55,  0.20], [ 1.40, -0.05], [ 1.20, -0.22], [ 0.90, -0.32],
+    [ 0.50, -0.38], [ 0.10, -0.42], [-0.30, -0.48], [-0.70, -0.55],
+    [-1.10, -0.55], [-1.40, -0.42], [-1.55, -0.20],
+  ];
+  s.moveTo(pts[0][0] * scaleX, pts[0][1] * scaleY);
+  for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0] * scaleX, pts[i][1] * scaleY);
+  s.closePath();
+  return s;
+}
+
+function addLayer(thickness, yHome, opts = {}) {
+  const shape = makeFootShape(opts.sx ?? 1.0, opts.sy ?? 1.0);
+  const geom = new THREE.ExtrudeGeometry(shape, {
+    depth: thickness,
+    bevelEnabled: true,
+    bevelThickness: opts.bevel ?? 0.04,
+    bevelSize: opts.bevel ?? 0.04,
+    bevelSegments: 2,
+    curveSegments: 24,
+  });
+  geom.translate(0, 0, -thickness / 2);
+
+  const group = new THREE.Group();
+  // Lay the slab flat: rotate so extrude (z) becomes vertical (y).
+  group.rotation.x = -Math.PI / 2;
+  // Position in scene
+  group.position.set(0, yHome, 0);
+  insoleGroup.add(group);
+
+  const mesh = new THREE.Mesh(geom, fillMat);
+  group.add(mesh);
+
+  const edges = new THREE.EdgesGeometry(geom, opts.edgeAngle ?? 28);
+  const stroke = opts.accent ? accentMat : inkMat;
+  const inkLine = new THREE.LineSegments(edges, stroke);
+  group.add(inkLine); linesList.push(inkLine);
+
+  const ghost = new THREE.LineSegments(edges, ghostMat);
+  const ax = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+  ghost.quaternion.setFromAxisAngle(ax, (Math.random() * 2 - 1) * 0.03);
+  group.add(ghost); linesList.push(ghost);
+
+  // Explosion vector: layers separate vertically (y axis) by their stack index.
+  pieces.push({
+    mesh: group,
+    home: new THREE.Vector3(0, yHome, 0),
+    homeQuat: group.quaternion.clone(),
+    stackIndex: opts.stackIndex ?? 0,
+  });
+  return group;
+}
+
+// Stack from bottom (y = 0) up. Total resting height stays small so the
+// insole reads as a unified object when not exploded.
+addLayer(0.12, 0.00, { stackIndex: 0, sx: 1.00, sy: 1.00, bevel: 0.05 }); // base
+addLayer(0.16, 0.14, { stackIndex: 1, sx: 0.97, sy: 0.97, bevel: 0.05 }); // EVA midsole
+addLayer(0.18, 0.32, { stackIndex: 2, sx: 0.94, sy: 0.93, bevel: 0.06, accent: true }); // arch shell (accented)
+addLayer(0.10, 0.46, { stackIndex: 3, sx: 0.96, sy: 0.95, bevel: 0.04 }); // foam pad
+addLayer(0.05, 0.54, { stackIndex: 4, sx: 0.98, sy: 0.97, bevel: 0.03 }); // top cover
+
+// Center vertically around y=0 for nicer framing
+insoleGroup.position.y = -0.3;
+
+// --- Intersection-seam pass (kept from donsgarage approach) ---
+const normalMat = new THREE.MeshNormalMaterial();
+const depthTex = new THREE.DepthTexture();
+depthTex.type = THREE.UnsignedShortType;
+const rt = new THREE.WebGLRenderTarget(1, 1, { depthTexture: depthTex, depthBuffer: true });
+
+const edgeScene = new THREE.Scene();
+const edgeCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const edgeMat = new THREE.ShaderMaterial({
+  uniforms: {
+    tNormal: { value: rt.texture },
+    tDepth:  { value: depthTex },
+    resolution: { value: new THREE.Vector2(1, 1) },
+    cameraNear: { value: camera.near },
+    cameraFar:  { value: camera.far },
+    inkColor:   { value: new THREE.Color(0x101010) },
+    edgeStrength: { value: 1.0 },
+    normalThreshold: { value: 0.30 },
+    depthThreshold: { value: 0.0009 },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+  `,
+  fragmentShader: `
+    uniform sampler2D tNormal;
+    uniform sampler2D tDepth;
+    uniform vec2 resolution;
+    uniform float cameraNear, cameraFar;
+    uniform vec3 inkColor;
+    uniform float edgeStrength;
+    uniform float normalThreshold;
+    uniform float depthThreshold;
+    varying vec2 vUv;
+
+    float linearDepth(float z) {
+      float ndc = z * 2.0 - 1.0;
+      return (2.0 * cameraNear * cameraFar) / (cameraFar + cameraNear - ndc * (cameraFar - cameraNear));
+    }
+    float sampleDepth(vec2 uv) { return linearDepth(texture2D(tDepth, uv).r); }
+
+    void main() {
+      vec2 px = 1.0 / resolution;
+      float zRaw = texture2D(tDepth, vUv).r;
+      if (zRaw >= 0.9995) discard;
+
+      vec3 n_tl = texture2D(tNormal, vUv + vec2(-px.x, -px.y)).rgb;
+      vec3 n_t  = texture2D(tNormal, vUv + vec2( 0.0,  -px.y)).rgb;
+      vec3 n_tr = texture2D(tNormal, vUv + vec2( px.x, -px.y)).rgb;
+      vec3 n_l  = texture2D(tNormal, vUv + vec2(-px.x,  0.0 )).rgb;
+      vec3 n_r  = texture2D(tNormal, vUv + vec2( px.x,  0.0 )).rgb;
+      vec3 n_bl = texture2D(tNormal, vUv + vec2(-px.x,  px.y)).rgb;
+      vec3 n_b  = texture2D(tNormal, vUv + vec2( 0.0,   px.y)).rgb;
+      vec3 n_br = texture2D(tNormal, vUv + vec2( px.x,  px.y)).rgb;
+      vec3 gx = -n_tl - 2.0*n_l - n_bl + n_tr + 2.0*n_r + n_br;
+      vec3 gy = -n_tl - 2.0*n_t - n_tr + n_bl + 2.0*n_b + n_br;
+      float nEdge = sqrt(dot(gx, gx) + dot(gy, gy));
+
+      float d   = sampleDepth(vUv);
+      float d_l = sampleDepth(vUv + vec2(-px.x, 0.0));
+      float d_r = sampleDepth(vUv + vec2( px.x, 0.0));
+      float d_t = sampleDepth(vUv + vec2(0.0, -px.y));
+      float d_b = sampleDepth(vUv + vec2(0.0,  px.y));
+      float dEdge = max(max(abs(d - d_l), abs(d - d_r)), max(abs(d - d_t), abs(d - d_b)));
+
+      float nE = smoothstep(normalThreshold, normalThreshold * 1.8, nEdge);
+      float dE = smoothstep(depthThreshold * d, depthThreshold * d * 3.0, dEdge);
+
+      float edge = clamp(max(dE, nE) * edgeStrength, 0.0, 1.0);
+      if (edge < 0.04) discard;
+
+      gl_FragColor = vec4(inkColor, edge);
+    }
+  `,
+  transparent: true,
+  depthTest: false,
+  depthWrite: false,
+});
+edgeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), edgeMat));
+
+// --- Explosion + scroll motion ---
+// Each layer separates upward by its stackIndex; lower layers stay near home,
+// upper layers fly higher — classic exploded-view diagram.
+const LAYER_GAP = 0.55;
+const tmpQuat = new THREE.Quaternion();
+const tmpPos = new THREE.Vector3();
+function applyExplosion(e) {
+  const eased = e * e * (3 - 2 * e);
+  for (const p of pieces) {
+    const lift = p.stackIndex * LAYER_GAP * eased;
+    tmpPos.copy(p.home);
+    tmpPos.y += lift;
+    p.mesh.position.copy(tmpPos);
+    // Tiny tilt during separation, settle flat at full explode
+    const tilt = (p.stackIndex - 2) * 0.04 * Math.sin(eased * Math.PI);
+    tmpQuat.setFromAxisAngle(new THREE.Vector3(0, 0, 1), tilt).multiply(p.homeQuat);
+    p.mesh.quaternion.copy(tmpQuat);
+  }
+}
+
+// Scroll: 5 sections.
+//  0.0-0.2 hero:        insole drifts in from left, intact, 3/4 angle
+//  0.2-0.4 scan:        insole centered, slow turntable
+//  0.4-0.6 model:       peak explosion — layers separate vertically
+//  0.6-0.8 ship:        reassembling, drifting right
+//  0.8-1.0 about:       intact, smaller, head-on
+function lerp(a, b, t) { return a + (b - a) * t; }
+function smoothstep(t) { return t * t * (3 - 2 * t); }
+function lerpSegments(t, stops) {
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (t >= stops[i].at && t <= stops[i + 1].at) {
+      const u = (t - stops[i].at) / (stops[i + 1].at - stops[i].at);
+      return lerp(stops[i].val, stops[i + 1].val, smoothstep(u));
+    }
+  }
+  return t <= stops[0].at ? stops[0].val : stops[stops.length - 1].val;
+}
+
+let scrollProgress = 0, smoothedProgress = 0;
+function updateScroll() {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  scrollProgress = total > 0 ? window.scrollY / total : 0;
+}
+window.addEventListener('scroll', updateScroll, { passive: true });
+window.addEventListener('resize', updateScroll);
+updateScroll();
+
+const rail = document.getElementById('rail');
+const railTicks = [...rail.querySelectorAll('.tick')];
+const sections = [...document.querySelectorAll('main section')];
+function updateRail() {
+  const mid = window.scrollY + window.innerHeight / 2;
+  let activeI = 0;
+  for (let i = 0; i < sections.length; i++) if (sections[i].offsetTop <= mid) activeI = i;
+  railTicks.forEach(t => t.classList.toggle('active', +t.dataset.i === activeI));
+}
+window.addEventListener('scroll', updateRail, { passive: true });
+window.addEventListener('resize', updateRail);
+updateRail();
+
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) e.target.classList.add('in');
+}, { threshold: 0.25 });
+document.querySelectorAll('.panel').forEach(p => io.observe(p));
+
+let t0 = performance.now();
+function tick(now) {
+  const dt = (now - t0) / 1000; t0 = now;
+  smoothedProgress += (scrollProgress - smoothedProgress) * Math.min(1, dt * 6);
+  const p = smoothedProgress;
+
+  const explosion = lerpSegments(p, [
+    { at: 0.00, val: 0.00 },
+    { at: 0.20, val: 0.05 },
+    { at: 0.40, val: 0.70 },
+    { at: 0.52, val: 1.00 },
+    { at: 0.65, val: 0.55 },
+    { at: 0.85, val: 0.05 },
+    { at: 1.00, val: 0.00 },
+  ]);
+
+  const objX = lerpSegments(p, [
+    { at: 0.00, val: -3.20 },
+    { at: 0.08, val: -1.40 },
+    { at: 0.28, val: -0.70 },
+    { at: 0.50, val:  0.00 },
+    { at: 0.72, val:  0.70 },
+    { at: 0.92, val:  1.40 },
+    { at: 1.00, val:  3.20 },
+  ]);
+  const objY = lerpSegments(p, [
+    { at: 0.00, val: -0.60 },
+    { at: 0.10, val: -0.05 },
+    { at: 0.50, val:  0.10 },
+    { at: 0.90, val: -0.05 },
+    { at: 1.00, val: -0.60 },
+  ]);
+  const bobble = Math.sin(now / 240) * 0.03 * (1 - explosion);
+
+  const opacity = lerpSegments(p, [
+    { at: 0.00, val: 0.18 },
+    { at: 0.20, val: 0.78 },
+    { at: 0.50, val: 1.00 },
+    { at: 0.80, val: 0.78 },
+    { at: 1.00, val: 0.18 },
+  ]);
+  inkMat.opacity   = 1.00 * opacity;
+  ghostMat.opacity = 0.55 * opacity;
+  accentMat.opacity = 0.90 * opacity;
+
+  const scale = lerpSegments(p, [
+    { at: 0.00, val: 0.60 },
+    { at: 0.10, val: 0.95 },
+    { at: 0.50, val: 1.10 },
+    { at: 0.90, val: 0.90 },
+    { at: 1.00, val: 0.60 },
+  ]);
+
+  insoleGroup.position.x = objX;
+  insoleGroup.position.y = objY + bobble - 0.3;
+  insoleGroup.scale.setScalar(scale);
+
+  // 3/4 turntable yaw — scroll-driven with a slow idle drift
+  insoleGroup.rotation.y = -0.5 + p * Math.PI * 1.6 + (now / 1000) * 0.05;
+  // Slight tilt so the layers read as a stack rather than a flat plate
+  insoleGroup.rotation.x = 0.25 + Math.sin(p * Math.PI * 2) * 0.05;
+
+  applyExplosion(explosion);
+
+  // Pass 1: normals + depth → RT
+  for (let i = 0; i < linesList.length; i++) linesList[i].visible = false;
+  scene.overrideMaterial = normalMat;
+  renderer.setRenderTarget(rt);
+  renderer.clear();
+  renderer.render(scene, camera);
+  scene.overrideMaterial = null;
+  renderer.setRenderTarget(null);
+  for (let i = 0; i < linesList.length; i++) linesList[i].visible = true;
+
+  // Pass 2: scene
+  renderer.render(scene, camera);
+
+  // Pass 3: composite seam ink
+  edgeMat.uniforms.edgeStrength.value = opacity;
+  const prevAutoClear = renderer.autoClear;
+  renderer.autoClear = false;
+  renderer.render(edgeScene, edgeCam);
+  renderer.autoClear = prevAutoClear;
+
+  requestAnimationFrame(tick);
+}
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  const dpr = renderer.getPixelRatio();
+  const rw = Math.max(1, Math.floor(w * dpr));
+  const rh = Math.max(1, Math.floor(h * dpr));
+  rt.setSize(rw, rh);
+  edgeMat.uniforms.resolution.value.set(rw, rh);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
