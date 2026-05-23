@@ -525,13 +525,77 @@ function addLayer(thickness, yHome, opts = {}) {
   return group;
 }
 
-// Stack from bottom (y = 0) up. Total resting height stays small so the
-// insole reads as a unified object when not exploded.
-addLayer(0.12, 0.00, { stackIndex: 0, sx: 1.00, sy: 1.00, bevel: 0.05 }); // base
-addLayer(0.16, 0.14, { stackIndex: 1, sx: 0.97, sy: 0.97, bevel: 0.05 }); // EVA midsole
-addLayer(0.18, 0.32, { stackIndex: 2, sx: 0.94, sy: 0.93, bevel: 0.06, accent: true }); // arch shell (accented)
-addLayer(0.10, 0.46, { stackIndex: 3, sx: 0.96, sy: 0.95, bevel: 0.04 }); // foam pad
-addLayer(0.05, 0.54, { stackIndex: 4, sx: 0.98, sy: 0.97, bevel: 0.03 }); // top cover
+// Stack from bottom (y = 0) up. Real insole anatomy, top-down:
+//   top cover (fabric)  → wraps slightly larger
+//   foam pad            → has a metatarsal dome under forefoot
+//   arch shell          → structural; heel cup rim + medial arch dome
+//   EVA midsole         → wider footprint, beveled
+//   base sheet          → ground-contact reference
+// Each layer's footprint is scaled to nest like a real laminated insole:
+// the structural shell is the smallest piece, the midsole wraps around it,
+// and the fabric cover is slightly oversized so it can fold over the edge.
+const baseLayer = addLayer(0.10, 0.00, { stackIndex: 0, sx: 1.00, sy: 1.00, bevel: 0.04 });
+const evaLayer  = addLayer(0.18, 0.13, { stackIndex: 1, sx: 0.98, sy: 0.98, bevel: 0.06 });
+const shellLayer= addLayer(0.16, 0.32, { stackIndex: 2, sx: 0.92, sy: 0.91, bevel: 0.05, accent: true });
+const foamLayer = addLayer(0.12, 0.46, { stackIndex: 3, sx: 0.95, sy: 0.94, bevel: 0.04 });
+const coverLayer= addLayer(0.04, 0.55, { stackIndex: 4, sx: 1.01, sy: 1.005, bevel: 0.025 });
+
+// --- Anatomical features ---------------------------------------------------
+// Add real insole pieces on top of their parent layers so they explode in
+// formation. Each feature lives in the parent layer's local frame:
+//   local x = foot length axis (heel -1.55 → toes +1.55)
+//   local y = foot width axis (medial = +y for a right-foot outline)
+//   local z = layer thickness (top of slab is at +thickness/2 + bevel)
+function addEllipsoid(parent, opts) {
+  const { x = 0, y = 0, z = 0, rx, ry, rz, segments = 48, accent = false } = opts;
+  const geom = new THREE.SphereGeometry(1, segments, Math.max(16, segments / 2));
+  geom.scale(rx, ry, rz);
+  geom.translate(x, y, z);
+  const mesh = new THREE.Mesh(geom, fillMat);
+  parent.add(mesh);
+  // A sphere has no sharp edges so EdgesGeometry produces nothing — the
+  // seam-ink shader handles silhouettes for these. We still add a soft
+  // equator hint so the dome reads as volumetric in line-art passes.
+  return mesh;
+}
+
+function addHeelCupRim(parent, opts) {
+  const { x = -1.15, y = 0.0, z = 0.0, radius = 0.55, tube = 0.045, arc = Math.PI * 1.05, rotZ = 0 } = opts;
+  const geom = new THREE.TorusGeometry(radius, tube, 14, 64, arc);
+  // Squish vertically so the rim is a lip, not a tube: scale tube cross-section
+  // and orient the ring in the layer's local XY plane (already there for Torus).
+  geom.scale(1.0, 0.85, 1.7);
+  // Torus default arc is centered at +x; rotate so the open mouth faces toes.
+  const wrap = new THREE.Group();
+  wrap.position.set(x, y, z);
+  wrap.rotation.z = rotZ + Math.PI - arc / 2; // open mouth toward +x (toes)
+  parent.add(wrap);
+  const mesh = new THREE.Mesh(geom, fillMat);
+  wrap.add(mesh);
+  // Don't add EdgesGeometry — the torus's quad seams would draw every
+  // radial ring as ink. The seam-ink shader already inks the silhouette.
+  return wrap;
+}
+
+// Shell features: heel cup rim + medial arch dome
+// Layer local-z top surface ≈ thickness/2 + bevel
+const shellTopZ = 0.16 / 2 + 0.05;
+addHeelCupRim(shellLayer, { x: -1.10, y: 0.0, z: shellTopZ - 0.02, radius: 0.50, tube: 0.05, arc: Math.PI * 1.08 });
+addEllipsoid(shellLayer,  { x: -0.45, y:  0.22, z: shellTopZ - 0.02, rx: 0.55, ry: 0.32, rz: 0.10, accent: true }); // medial arch dome
+
+// Foam features: metatarsal pad dome under the forefoot
+const foamTopZ = 0.12 / 2 + 0.04;
+addEllipsoid(foamLayer, { x: 0.70, y: 0.05, z: foamTopZ - 0.015, rx: 0.45, ry: 0.32, rz: 0.07 });
+
+// Top cover: inset stitch line — a slightly-inside outline drawn in light ink
+(function addStitchOutline() {
+  const stitchShape = makeFootShape(0.95, 0.94);
+  const stitchPts = stitchShape.getPoints(160);
+  const v3s = stitchPts.map(p => new THREE.Vector3(p.x, p.y, 0.04 / 2 + 0.026));
+  const geom = new THREE.BufferGeometry().setFromPoints(v3s);
+  const line = new THREE.LineLoop(geom, ghostMat);
+  coverLayer.add(line); linesList.push(line);
+})();
 
 // Center vertically around y=0 for nicer framing
 insoleGroup.position.y = -0.3;
